@@ -7,65 +7,318 @@
   <title>ระบบลางานพนักงาน</title>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f6f8;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .welcome {
+      margin-bottom: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    select,
+    input,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .days {
+      margin-top: 15px;
+      padding: 12px;
+      background: #f1f3f5;
+      border-radius: 8px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 25px;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    #submitBtn {
+      background: #06c755;
+      color: white;
+    }
+
+    #status {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+  </style>
 </head>
 
 <body>
+
+<div class="container">
 
   <h2>ระบบลางานพนักงาน</h2>
 
   <div id="status">กำลังเชื่อมต่อ LINE...</div>
 
-  <script>
+  <div id="formArea" style="display:none;">
 
-    const LIFF_ID = "2011223159-lCWXwrUH";
+    <div class="welcome">
+      สวัสดีคุณ <span id="displayName"></span>
+    </div>
 
-    async function main() {
+    <label for="leaveType">ประเภทการลา</label>
 
-      const status = document.getElementById("status");
+    <select id="leaveType">
+      <option value="">-- เลือกประเภทการลา --</option>
+      <option value="ลาป่วย">ลาป่วย</option>
+      <option value="ลากิจ">ลากิจ</option>
+      <option value="ลาพักร้อน">ลาพักร้อน</option>
+      <option value="ลาคลอด">ลาคลอด</option>
+      <option value="ลาอื่นๆ">ลาอื่น ๆ</option>
+    </select>
 
-      try {
+    <label for="startDate">วันที่เริ่มลา</label>
 
-        await liff.init({
-          liffId: LIFF_ID
-        });
+    <input
+      type="date"
+      id="startDate"
+    >
 
-        console.log("LIFF initialized");
-        console.log("isInClient:", liff.isInClient());
-        console.log("isLoggedIn:", liff.isLoggedIn());
+    <label for="endDate">วันที่สิ้นสุด</label>
 
-        // ระบบนี้ใช้งานผ่าน LINE เท่านั้น
-        if (!liff.isInClient()) {
+    <input
+      type="date"
+      id="endDate"
+    >
 
-          status.innerHTML =
-            "กรุณาเปิดระบบนี้ผ่าน LINE";
+    <div class="days">
+      จำนวนวันลา:
+      <strong><span id="leaveDays">0</span> วัน</strong>
+    </div>
 
-          return;
-        }
+    <label for="reason">เหตุผล</label>
 
-        // ดึงข้อมูล LINE
-        const profile = await liff.getProfile();
+    <textarea
+      id="reason"
+      placeholder="กรุณาระบุเหตุผลการลา"
+    ></textarea>
 
-        console.log("LINE Profile:", profile);
+    <button id="submitBtn">
+      ส่งใบลา
+    </button>
 
-        status.innerHTML =
-          "สวัสดีคุณ " +
-          (profile.displayName || "ผู้ใช้งาน");
+  </div>
 
-      } catch (error) {
+</div>
 
-        console.error("LIFF Error:", error);
+<script>
 
-        status.innerHTML =
-          "เกิดข้อผิดพลาดในการเชื่อมต่อ LINE<br><br>" +
-          error.message;
+const LIFF_ID = "2011223159-lCWXwrUH";
 
-      }
+let lineProfile = null;
+
+
+/* =========================
+   เริ่มต้น LIFF
+========================= */
+
+async function main() {
+
+  const status = document.getElementById("status");
+
+  try {
+
+    await liff.init({
+      liffId: LIFF_ID
+    });
+
+    console.log("LIFF initialized");
+
+    if (!liff.isInClient()) {
+
+      status.innerHTML =
+        "กรุณาเปิดระบบนี้ผ่าน LINE";
+
+      return;
+    }
+
+    lineProfile = await liff.getProfile();
+
+    console.log("LINE Profile:", lineProfile);
+
+    document.getElementById("displayName").textContent =
+      lineProfile.displayName || "ผู้ใช้งาน";
+
+    status.style.display = "none";
+
+    document.getElementById("formArea").style.display = "block";
+
+  } catch (error) {
+
+    console.error(error);
+
+    status.innerHTML =
+      "เกิดข้อผิดพลาดในการเชื่อมต่อ LINE<br><br>" +
+      error.message;
+
+  }
+
+}
+
+
+/* =========================
+   คำนวณจำนวนวันลา
+========================= */
+
+function calculateLeaveDays() {
+
+  const start =
+    document.getElementById("startDate").value;
+
+  const end =
+    document.getElementById("endDate").value;
+
+  if (!start || !end) {
+
+    document.getElementById("leaveDays").textContent = "0";
+
+    return;
+  }
+
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+
+  if (endDate < startDate) {
+
+    document.getElementById("leaveDays").textContent = "0";
+
+    return;
+  }
+
+  const difference =
+    endDate - startDate;
+
+  const days =
+    Math.floor(
+      difference / (1000 * 60 * 60 * 24)
+    ) + 1;
+
+  document.getElementById("leaveDays").textContent =
+    days;
+
+}
+
+
+document
+  .getElementById("startDate")
+  .addEventListener("change", calculateLeaveDays);
+
+document
+  .getElementById("endDate")
+  .addEventListener("change", calculateLeaveDays);
+
+
+/* =========================
+   ส่งใบลา
+========================= */
+
+document
+  .getElementById("submitBtn")
+  .addEventListener("click", function() {
+
+    const leaveType =
+      document.getElementById("leaveType").value;
+
+    const startDate =
+      document.getElementById("startDate").value;
+
+    const endDate =
+      document.getElementById("endDate").value;
+
+    const reason =
+      document.getElementById("reason").value.trim();
+
+    const leaveDays =
+      document.getElementById("leaveDays").textContent;
+
+
+    if (!leaveType) {
+
+      alert("กรุณาเลือกประเภทการลา");
+      return;
 
     }
 
-    main();
+    if (!startDate || !endDate) {
 
-  </script>
+      alert("กรุณาเลือกวันที่ลา");
+      return;
+
+    }
+
+    if (Number(leaveDays) <= 0) {
+
+      alert("วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มลา");
+      return;
+
+    }
+
+    if (!reason) {
+
+      alert("กรุณาระบุเหตุผลการลา");
+      return;
+
+    }
+
+
+    alert(
+      "เตรียมส่งใบลา\n\n" +
+      "ประเภท: " + leaveType + "\n" +
+      "วันที่: " + startDate + " ถึง " + endDate + "\n" +
+      "จำนวน: " + leaveDays + " วัน"
+    );
+
+  });
+
+
+main();
+
+</script>
 
 </body>
 </html>
