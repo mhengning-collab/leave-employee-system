@@ -259,7 +259,7 @@ document
 
 document
   .getElementById("submitBtn")
-  .addEventListener("click", function() {
+  .addEventListener("click", async function() {
 
     const leaveType =
       document.getElementById("leaveType").value;
@@ -306,12 +306,70 @@ document
     }
 
 
+    const API_URL =
+  "https://script.google.com/macros/s/AKfycbx7TtRsa7zCVYkGifVczsplPKudx_QOvq52v6GCsdow2Lgf8-7HNSZKmNaoiIGphcBv/exec";
+
+const data = {
+  userId: lineProfile.userId,
+  displayName: lineProfile.displayName,
+  leaveType: leaveType,
+  startDate: startDate,
+  endDate: endDate,
+  leaveDays: Number(leaveDays),
+  reason: reason
+};
+
+const button = document.getElementById("submitBtn");
+
+button.disabled = true;
+button.textContent = "กำลังส่งใบลา...";
+
+try {
+
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain;charset=utf-8"
+    },
+    body: JSON.stringify(data)
+  });
+
+  const result = await response.json();
+
+  if (result.success) {
+
+    alert("ส่งใบลาเรียบร้อยแล้วค่ะ");
+
+    document.getElementById("leaveType").value = "";
+    document.getElementById("startDate").value = "";
+    document.getElementById("endDate").value = "";
+    document.getElementById("reason").value = "";
+    document.getElementById("leaveDays").textContent = "0";
+
+  } else {
+
     alert(
-      "เตรียมส่งใบลา\n\n" +
-      "ประเภท: " + leaveType + "\n" +
-      "วันที่: " + startDate + " ถึง " + endDate + "\n" +
-      "จำนวน: " + leaveDays + " วัน"
+      "ไม่สามารถส่งใบลาได้\n\n" +
+      result.message
     );
+
+  }
+
+} catch (error) {
+
+  console.error(error);
+
+  alert(
+    "เกิดข้อผิดพลาดในการส่งใบลา\n\n" +
+    error.message
+  );
+
+} finally {
+
+  button.disabled = false;
+  button.textContent = "ส่งใบลา";
+
+}
 
   });
 
