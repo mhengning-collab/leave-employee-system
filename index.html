@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>ระบบลางานพนักงาน</title>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+
+<body>
+
+  <h2>ระบบลางานพนักงาน</h2>
+
+  <div id="status">กำลังเชื่อมต่อ LINE...</div>
+
+  <script>
+
+    const LIFF_ID = "2011223159-lCWXwrUH";
+
+    async function main() {
+
+      const status = document.getElementById("status");
+
+      try {
+
+        await liff.init({
+          liffId: LIFF_ID
+        });
+
+        console.log("LIFF initialized");
+        console.log("isInClient:", liff.isInClient());
+        console.log("isLoggedIn:", liff.isLoggedIn());
+
+        // ระบบนี้ใช้งานผ่าน LINE เท่านั้น
+        if (!liff.isInClient()) {
+
+          status.innerHTML =
+            "กรุณาเปิดระบบนี้ผ่าน LINE";
+
+          return;
+        }
+
+        // ดึงข้อมูล LINE
+        const profile = await liff.getProfile();
+
+        console.log("LINE Profile:", profile);
+
+        status.innerHTML =
+          "สวัสดีคุณ " +
+          (profile.displayName || "ผู้ใช้งาน");
+
+      } catch (error) {
+
+        console.error("LIFF Error:", error);
+
+        status.innerHTML =
+          "เกิดข้อผิดพลาดในการเชื่อมต่อ LINE<br><br>" +
+          error.message;
+
+      }
+
+    }
+
+    main();
+
+  </script>
+
+</body>
+</html>
