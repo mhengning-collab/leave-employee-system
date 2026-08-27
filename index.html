@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>ระบบลางานพนักงาน</title>
+  <title>Employee Leave System</title>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
@@ -80,9 +80,111 @@
       color: white;
     }
 
+    #submitBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     #status {
       text-align: center;
       margin-bottom: 15px;
+    }
+
+    /* =========================
+       Custom English Calendar
+    ========================= */
+
+    .date-wrapper {
+      position: relative;
+    }
+
+    .date-display {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .calendar {
+      display: none;
+      position: absolute;
+      z-index: 1000;
+      top: calc(100% + 5px);
+      left: 0;
+      width: 100%;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+      padding: 12px;
+      box-sizing: border-box;
+    }
+
+    .calendar.show {
+      display: block;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .calendar-header button {
+      width: auto;
+      margin: 0;
+      padding: 6px 12px;
+      background: #f1f3f5;
+      color: #333;
+      font-size: 16px;
+    }
+
+    .month-title {
+      font-weight: bold;
+      font-size: 17px;
+    }
+
+    .calendar-weekdays,
+    .calendar-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+    }
+
+    .calendar-weekdays {
+      font-weight: bold;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .calendar-day {
+      padding: 9px 0;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+
+    .calendar-day:hover {
+      background: #e9f7ef;
+    }
+
+    .calendar-day.selected {
+      background: #06c755;
+      color: white;
+      font-weight: bold;
+    }
+
+    .calendar-day.empty {
+      cursor: default;
+    }
+
+    .calendar-day.empty:hover {
+      background: transparent;
     }
   </style>
 </head>
@@ -100,7 +202,7 @@
   <div id="formArea" style="display:none;">
 
     <div class="welcome">
-      สวัสดีคุณ / Welcome 
+      สวัสดีคุณ / Welcome
       <span id="displayName"></span>
     </div>
 
@@ -152,23 +254,64 @@
 
     </select>
 
-    <label for="startDate">
+
+    <!-- START DATE -->
+
+    <label>
       วันที่เริ่มลา / Start Date
     </label>
 
+    <div class="date-wrapper">
+
+      <input
+        type="text"
+        id="startDateDisplay"
+        class="date-display"
+        placeholder="Select start date"
+        readonly
+      >
+
+      <div
+        id="startCalendar"
+        class="calendar"
+      ></div>
+
+    </div>
+
     <input
-      type="date"
+      type="hidden"
       id="startDate"
     >
 
-    <label for="endDate">
+
+    <!-- END DATE -->
+
+    <label>
       วันที่สิ้นสุด / End Date
     </label>
 
+    <div class="date-wrapper">
+
+      <input
+        type="text"
+        id="endDateDisplay"
+        class="date-display"
+        placeholder="Select end date"
+        readonly
+      >
+
+      <div
+        id="endCalendar"
+        class="calendar"
+      ></div>
+
+    </div>
+
     <input
-      type="date"
+      type="hidden"
       id="endDate"
     >
+
 
     <div class="days">
       จำนวนวันลา / Leave Days:
@@ -176,6 +319,7 @@
         <span id="leaveDays">0</span> วัน / Day(s)
       </strong>
     </div>
+
 
     <label for="reason">
       เหตุผล / Reason
@@ -186,6 +330,7 @@
       placeholder="กรุณาระบุเหตุผลการลา / Please enter the reason for leave"
     ></textarea>
 
+
     <button id="submitBtn">
       ส่งใบลา / Submit Leave Request
     </button>
@@ -194,20 +339,26 @@
 
 </div>
 
+
 <script>
 
-const LIFF_ID = "2011223159-lCWXwrUH";
+const LIFF_ID =
+  "2011223159-lCWXwrUH";
+
+const API_URL =
+  "https://script.google.com/macros/s/AKfycbx7TtRsa7zCVYkGifVczsplPKudx_QOvq52v6GCsdow2Lgf8-7HNSZKmNaoiIGphcBv/exec";
 
 let lineProfile = null;
 
 
 /* =========================
-   เริ่มต้น LIFF
+   LIFF
 ========================= */
 
 async function main() {
 
-  const status = document.getElementById("status");
+  const status =
+    document.getElementById("status");
 
   try {
 
@@ -223,16 +374,26 @@ async function main() {
 
       return;
     }
-    lineProfile = await liff.getProfile();
 
-    console.log("LINE Profile:", lineProfile);
+    lineProfile =
+      await liff.getProfile();
 
-    document.getElementById("displayName").textContent =
-      lineProfile.displayName || "ผู้ใช้งาน";
+    console.log(
+      "LINE Profile:",
+      lineProfile
+    );
+
+    document.getElementById(
+      "displayName"
+    ).textContent =
+      lineProfile.displayName ||
+      "ผู้ใช้งาน";
 
     status.style.display = "none";
 
-    document.getElementById("formArea").style.display = "block";
+    document.getElementById(
+      "formArea"
+    ).style.display = "block";
 
   } catch (error) {
 
@@ -248,188 +409,608 @@ async function main() {
 
 
 /* =========================
-   คำนวณจำนวนวันลา
+   ENGLISH CALENDAR
+========================= */
+
+const monthNames = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December"
+];
+
+const weekdayNames = [
+  "Sun",
+  "Mon",
+  "Tue",
+  "Wed",
+  "Thu",
+  "Fri",
+  "Sat"
+];
+
+
+function createCalendar(
+  calendarId,
+  displayId,
+  hiddenId
+) {
+
+  const calendar =
+    document.getElementById(calendarId);
+
+  const display =
+    document.getElementById(displayId);
+
+  const hidden =
+    document.getElementById(hiddenId);
+
+  let selectedDate = null;
+
+  let viewDate = new Date();
+
+  function renderCalendar() {
+
+    calendar.innerHTML = "";
+
+    const header =
+      document.createElement("div");
+
+    header.className =
+      "calendar-header";
+
+    const previousButton =
+      document.createElement("button");
+
+    previousButton.textContent = "‹";
+
+    const nextButton =
+      document.createElement("button");
+
+    nextButton.textContent = "›";
+
+    const title =
+      document.createElement("div");
+
+    title.className =
+      "month-title";
+
+    title.textContent =
+      monthNames[viewDate.getMonth()] +
+      " " +
+      viewDate.getFullYear();
+
+    previousButton.onclick =
+      function(event) {
+
+        event.stopPropagation();
+
+        viewDate.setMonth(
+          viewDate.getMonth() - 1
+        );
+
+        renderCalendar();
+      };
+
+    nextButton.onclick =
+      function(event) {
+
+        event.stopPropagation();
+
+        viewDate.setMonth(
+          viewDate.getMonth() + 1
+        );
+
+        renderCalendar();
+      };
+
+    header.appendChild(previousButton);
+    header.appendChild(title);
+    header.appendChild(nextButton);
+
+    calendar.appendChild(header);
+
+
+    const weekdays =
+      document.createElement("div");
+
+    weekdays.className =
+      "calendar-weekdays";
+
+    weekdayNames.forEach(function(day) {
+
+      const element =
+        document.createElement("div");
+
+      element.textContent = day;
+
+      weekdays.appendChild(element);
+
+    });
+
+    calendar.appendChild(weekdays);
+
+
+    const daysContainer =
+      document.createElement("div");
+
+    daysContainer.className =
+      "calendar-days";
+
+
+    const year =
+      viewDate.getFullYear();
+
+    const month =
+      viewDate.getMonth();
+
+    const firstDay =
+      new Date(year, month, 1).getDay();
+
+    const daysInMonth =
+      new Date(
+        year,
+        month + 1,
+        0
+      ).getDate();
+
+
+    for (
+      let i = 0;
+      i < firstDay;
+      i++
+    ) {
+
+      const empty =
+        document.createElement("div");
+
+      empty.className =
+        "calendar-day empty";
+
+      daysContainer.appendChild(empty);
+    }
+
+
+    for (
+      let day = 1;
+      day <= daysInMonth;
+      day++
+    ) {
+
+      const element =
+        document.createElement("div");
+
+      element.className =
+        "calendar-day";
+
+      element.textContent = day;
+
+
+      if (
+        selectedDate &&
+        selectedDate.getFullYear() === year &&
+        selectedDate.getMonth() === month &&
+        selectedDate.getDate() === day
+      ) {
+
+        element.classList.add(
+          "selected"
+        );
+
+      }
+
+
+      element.onclick =
+        function(event) {
+
+          event.stopPropagation();
+
+          selectedDate =
+            new Date(
+              year,
+              month,
+              day
+            );
+
+          const yyyy =
+            selectedDate
+              .getFullYear()
+              .toString();
+
+          const mm =
+            String(
+              selectedDate.getMonth() + 1
+            ).padStart(2, "0");
+
+          const dd =
+            String(
+              selectedDate.getDate()
+            ).padStart(2, "0");
+
+          const value =
+            yyyy + "-" + mm + "-" + dd;
+
+          hidden.value = value;
+
+
+          display.value =
+            monthNames[
+              selectedDate.getMonth()
+            ] +
+            " " +
+            selectedDate.getDate() +
+            ", " +
+            selectedDate.getFullYear();
+
+
+          calendar.classList.remove(
+            "show"
+          );
+
+
+          calculateLeaveDays();
+
+        };
+
+
+      daysContainer.appendChild(element);
+
+    }
+
+
+    calendar.appendChild(
+      daysContainer
+    );
+
+  }
+
+
+  display.onclick =
+    function(event) {
+
+      event.stopPropagation();
+
+      document
+        .querySelectorAll(".calendar")
+        .forEach(function(item) {
+
+          if (item !== calendar) {
+            item.classList.remove(
+              "show"
+            );
+          }
+
+        });
+
+      calendar.classList.toggle(
+        "show"
+      );
+
+      renderCalendar();
+
+    };
+
+}
+
+
+createCalendar(
+  "startCalendar",
+  "startDateDisplay",
+  "startDate"
+);
+
+createCalendar(
+  "endCalendar",
+  "endDateDisplay",
+  "endDate"
+);
+
+
+/* =========================
+   CLOSE CALENDAR
+========================= */
+
+document.addEventListener(
+  "click",
+  function() {
+
+    document
+      .querySelectorAll(".calendar")
+      .forEach(function(calendar) {
+
+        calendar.classList.remove(
+          "show"
+        );
+
+      });
+
+  }
+);
+
+
+/* =========================
+   CALCULATE LEAVE DAYS
 ========================= */
 
 function calculateLeaveDays() {
 
   const start =
-    document.getElementById("startDate").value;
+    document.getElementById(
+      "startDate"
+    ).value;
 
   const end =
-    document.getElementById("endDate").value;
+    document.getElementById(
+      "endDate"
+    ).value;
+
 
   if (!start || !end) {
 
-    document.getElementById("leaveDays").textContent = "0";
+    document.getElementById(
+      "leaveDays"
+    ).textContent = "0";
 
     return;
   }
 
-  const startDate = new Date(start);
-  const endDate = new Date(end);
+
+  const startDate =
+    new Date(start + "T00:00:00");
+
+  const endDate =
+    new Date(end + "T00:00:00");
+
 
   if (endDate < startDate) {
 
-    document.getElementById("leaveDays").textContent = "0";
+    document.getElementById(
+      "leaveDays"
+    ).textContent = "0";
 
     return;
   }
+
 
   const difference =
     endDate - startDate;
 
+
   const days =
     Math.floor(
-      difference / (1000 * 60 * 60 * 24)
+      difference /
+      (1000 * 60 * 60 * 24)
     ) + 1;
 
-  document.getElementById("leaveDays").textContent =
-    days;
+
+  document.getElementById(
+    "leaveDays"
+  ).textContent = days;
 
 }
 
 
-document
-  .getElementById("startDate")
-  .addEventListener("change", calculateLeaveDays);
-
-document
-  .getElementById("endDate")
-  .addEventListener("change", calculateLeaveDays);
-
-
 /* =========================
-   ส่งใบลา
+   SUBMIT LEAVE
 ========================= */
 
 document
   .getElementById("submitBtn")
-  .addEventListener("click", async function() {
+  .addEventListener(
+    "click",
+    async function() {
 
-    const leaveType =
-      document.getElementById("leaveType").value;
+      const leaveType =
+        document.getElementById(
+          "leaveType"
+        ).value;
 
-    const startDate =
-      document.getElementById("startDate").value;
+      const startDate =
+        document.getElementById(
+          "startDate"
+        ).value;
 
-    const endDate =
-      document.getElementById("endDate").value;
+      const endDate =
+        document.getElementById(
+          "endDate"
+        ).value;
 
-    const reason =
-      document.getElementById("reason").value.trim();
+      const reason =
+        document.getElementById(
+          "reason"
+        ).value.trim();
 
-    const leaveDays =
-      document.getElementById("leaveDays").textContent;
+      const leaveDays =
+        document.getElementById(
+          "leaveDays"
+        ).textContent;
 
 
-    if (!leaveType) {
-      alert(
-        "กรุณาเลือกประเภทการลา\n" +
-        "Please select a leave type"
-      );
-      return;
+      if (!leaveType) {
+
+        alert(
+          "กรุณาเลือกประเภทการลา\n" +
+          "Please select a leave type"
+        );
+
+        return;
+      }
+
+
+      if (!startDate || !endDate) {
+
+        alert(
+          "กรุณาเลือกวันที่ลา\n" +
+          "Please select the leave dates"
+        );
+
+        return;
+      }
+
+
+      if (Number(leaveDays) <= 0) {
+
+        alert(
+          "วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มลา\n" +
+          "End date cannot be earlier than start date"
+        );
+
+        return;
+      }
+
+
+      if (!reason) {
+
+        alert(
+          "กรุณาระบุเหตุผลการลา\n" +
+          "Please enter the reason for leave"
+        );
+
+        return;
+      }
+
+
+      const data = {
+
+        action: "submitLeave",
+
+        userId:
+          lineProfile.userId,
+
+        displayName:
+          lineProfile.displayName,
+
+        leaveType:
+          leaveType,
+
+        startDate:
+          startDate,
+
+        endDate:
+          endDate,
+
+        leaveDays:
+          Number(leaveDays),
+
+        reason:
+          reason
+
+      };
+
+
+      const button =
+        document.getElementById(
+          "submitBtn"
+        );
+
+
+      button.disabled = true;
+
+      button.textContent =
+        "กำลังส่งใบลา... / Submitting...";
+
+
+      try {
+
+        const response =
+          await fetch(
+            API_URL,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "text/plain;charset=utf-8"
+              },
+
+              body:
+                JSON.stringify(data)
+            }
+          );
+
+
+        const result =
+          await response.json();
+
+
+        if (result.success) {
+
+          alert(
+            "ส่งใบลาเรียบร้อยแล้วค่ะ\n" +
+            "Leave request submitted successfully."
+          );
+
+
+          document.getElementById(
+            "leaveType"
+          ).value = "";
+
+          document.getElementById(
+            "startDate"
+          ).value = "";
+
+          document.getElementById(
+            "endDate"
+          ).value = "";
+
+          document.getElementById(
+            "startDateDisplay"
+          ).value = "";
+
+          document.getElementById(
+            "endDateDisplay"
+          ).value = "";
+
+          document.getElementById(
+            "reason"
+          ).value = "";
+
+          document.getElementById(
+            "leaveDays"
+          ).textContent = "0";
+
+
+        } else {
+
+          alert(
+            "ไม่สามารถส่งใบลาได้\n" +
+            "Unable to submit leave request.\n\n" +
+            result.message
+          );
+
+        }
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "เกิดข้อผิดพลาดในการส่งใบลา\n" +
+          "An error occurred while submitting the leave request.\n\n" +
+          error.message
+        );
+
+
+      } finally {
+
+        button.disabled = false;
+
+        button.textContent =
+          "ส่งใบลา / Submit Leave Request";
+
+      }
+
     }
-
-    if (!startDate || !endDate) {
-      alert(
-        "กรุณาเลือกวันที่ลา\n" +
-        "Please select the leave dates"
-      );
-      return;
-    }
-
-    if (Number(leaveDays) <= 0) {
-      alert(
-        "วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มลา\n" +
-        "End date cannot be earlier than start date"
-      );
-      return;
-    }
-
-    if (!reason) {
-      alert(
-        "กรุณาระบุเหตุผลการลา\n" +
-        "Please enter the reason for leave"
-      );
-      return;
-    }
-
-
-    const API_URL =
-  "https://script.google.com/macros/s/AKfycbx7TtRsa7zCVYkGifVczsplPKudx_QOvq52v6GCsdow2Lgf8-7HNSZKmNaoiIGphcBv/exec";
-
-const data = {
-  action: "submitLeave",
-  userId: lineProfile.userId,
-  displayName: lineProfile.displayName,
-  leaveType: leaveType,
-  startDate: startDate,
-  endDate: endDate,
-  leaveDays: Number(leaveDays),
-  reason: reason
-};
-
-const button = document.getElementById("submitBtn");
-
-button.disabled = true;
-button.textContent = 
-  "กำลังส่งใบลา... / Submitting...";
-
-try {
-
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    },
-    body: JSON.stringify(data)
-  });
-
-  const result = await response.json();
-
-  if (result.success) {
-
-    alert(
-      "ส่งใบลาเรียบร้อยแล้วค่ะ\n" +
-      "Leave request submitted successfully."
-    );
-
-    document.getElementById("leaveType").value = "";
-    document.getElementById("startDate").value = "";
-    document.getElementById("endDate").value = "";
-    document.getElementById("reason").value = "";
-    document.getElementById("leaveDays").textContent = "0";
-
-  } else {
-
-    alert(
-      "ไม่สามารถส่งใบลาได้\n" +
-      "Unable to submit leave request.\n\n" +
-      result.message
-    );
-
-  }
-
-} catch (error) {
-
-  console.error(error);
-
-  alert(
-    "เกิดข้อผิดพลาดในการส่งใบลา\n" +
-    "An error occurred while submitting the leave request.\n\n" +
-    error.message
   );
-
-} finally {
-
-  button.disabled = false;
-  button.textContent = 
-    "ส่งใบลา / Submit Leave Request";
-
-}
-
-  });
 
 
 main();
