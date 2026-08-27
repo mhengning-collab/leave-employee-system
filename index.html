@@ -91,17 +91,22 @@
 
 <div class="container">
 
-  <h2>ระบบลางานพนักงาน</h2>
+  <h2>ระบบลางานพนักงาน / Employee Leave System</h2>
 
-  <div id="status">กำลังเชื่อมต่อ LINE...</div>
+  <div id="status">
+    กำลังเชื่อมต่อ LINE... / Connecting to LINE...
+  </div>
 
   <div id="formArea" style="display:none;">
 
     <div class="welcome">
-      สวัสดีคุณ <span id="displayName"></span>
+      สวัสดีคุณ / Welcome 
+      <span id="displayName"></span>
     </div>
 
-    <label for="leaveType">ประเภทการลา</label>
+    <label for="leaveType">
+      ประเภทการลา / Leave Type
+    </label>
 
     <select id="leaveType">
 
@@ -134,7 +139,7 @@
       </option>
 
       <option value="ลากิจฉุกเฉิน">
-        ลากิจฉุกเฉิน / Spacial Case
+        ลากิจฉุกเฉิน / Special Case
       </option>
 
       <option value="ลาเกณฑ์ทหาร">
@@ -147,14 +152,18 @@
 
     </select>
 
-    <label for="startDate">วันที่เริ่มลา</label>
+    <label for="startDate">
+      วันที่เริ่มลา / Start Date
+    </label>
 
     <input
       type="date"
       id="startDate"
     >
 
-    <label for="endDate">วันที่สิ้นสุด</label>
+    <label for="endDate">
+      วันที่สิ้นสุด / End Date
+    </label>
 
     <input
       type="date"
@@ -162,19 +171,23 @@
     >
 
     <div class="days">
-      จำนวนวันลา:
-      <strong><span id="leaveDays">0</span> วัน</strong>
+      จำนวนวันลา / Leave Days:
+      <strong>
+        <span id="leaveDays">0</span> วัน / Day(s)
+      </strong>
     </div>
 
-    <label for="reason">เหตุผล</label>
+    <label for="reason">
+      เหตุผล / Reason
+    </label>
 
     <textarea
       id="reason"
-      placeholder="กรุณาระบุเหตุผลการลา"
+      placeholder="กรุณาระบุเหตุผลการลา / Please enter the reason for leave"
     ></textarea>
 
     <button id="submitBtn">
-      ส่งใบลา
+      ส่งใบลา / Submit Leave Request
     </button>
 
   </div>
@@ -204,14 +217,12 @@ async function main() {
 
     console.log("LIFF initialized");
 
-    if (!liff.isInClient()) {
+    if (!liff.isLoggedIn()) {
 
-      status.innerHTML =
-        "กรุณาเปิดระบบนี้ผ่าน LINE";
+      liff.login();
 
       return;
     }
-
     lineProfile = await liff.getProfile();
 
     console.log("LINE Profile:", lineProfile);
@@ -313,31 +324,35 @@ document
 
 
     if (!leaveType) {
-
-      alert("กรุณาเลือกประเภทการลา");
+      alert(
+        "กรุณาเลือกประเภทการลา\n" +
+        "Please select a leave type"
+      );
       return;
-
     }
 
     if (!startDate || !endDate) {
-
-      alert("กรุณาเลือกวันที่ลา");
+      alert(
+        "กรุณาเลือกวันที่ลา\n" +
+        "Please select the leave dates"
+      );
       return;
-
     }
 
     if (Number(leaveDays) <= 0) {
-
-      alert("วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มลา");
+      alert(
+        "วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มลา\n" +
+        "End date cannot be earlier than start date"
+      );
       return;
-
     }
 
     if (!reason) {
-
-      alert("กรุณาระบุเหตุผลการลา");
+      alert(
+        "กรุณาระบุเหตุผลการลา\n" +
+        "Please enter the reason for leave"
+      );
       return;
-
     }
 
 
@@ -358,7 +373,8 @@ const data = {
 const button = document.getElementById("submitBtn");
 
 button.disabled = true;
-button.textContent = "กำลังส่งใบลา...";
+button.textContent = 
+  "กำลังส่งใบลา... / Submitting...";
 
 try {
 
@@ -374,7 +390,10 @@ try {
 
   if (result.success) {
 
-    alert("ส่งใบลาเรียบร้อยแล้วค่ะ");
+    alert(
+      "ส่งใบลาเรียบร้อยแล้วค่ะ\n" +
+      "Leave request submitted successfully."
+    );
 
     document.getElementById("leaveType").value = "";
     document.getElementById("startDate").value = "";
@@ -385,7 +404,8 @@ try {
   } else {
 
     alert(
-      "ไม่สามารถส่งใบลาได้\n\n" +
+      "ไม่สามารถส่งใบลาได้\n" +
+      "Unable to submit leave request.\n\n" +
       result.message
     );
 
@@ -396,14 +416,16 @@ try {
   console.error(error);
 
   alert(
-    "เกิดข้อผิดพลาดในการส่งใบลา\n\n" +
+    "เกิดข้อผิดพลาดในการส่งใบลา\n" +
+    "An error occurred while submitting the leave request.\n\n" +
     error.message
   );
 
 } finally {
 
   button.disabled = false;
-  button.textContent = "ส่งใบลา";
+  button.textContent = 
+    "ส่งใบลา / Submit Leave Request";
 
 }
 
