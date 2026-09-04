@@ -90,6 +90,61 @@
       margin-bottom: 15px;
     }
 
+async function loadCompanyHolidays() {
+
+  try {
+
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body: JSON.stringify({
+            action:
+              "getCompanyHolidays"
+          })
+        }
+      );
+
+    const result =
+      await response.json();
+
+    if (result.success) {
+
+      companyHolidays =
+        result.holidays || [];
+
+      console.log(
+        "Company Holidays:",
+        companyHolidays
+      );
+
+    } else {
+
+      console.error(
+        "Unable to load company holidays:",
+        result.message
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "GET COMPANY HOLIDAYS ERROR:",
+      error
+    );
+
+  }
+
+}
+    
     /* =========================
        Custom English Calendar
     ========================= */
@@ -188,6 +243,10 @@
     }
 
     .calendar-day.weekend {
+      color: #e53935;
+      font-weight: bold;
+    }
+    .calendar-day.holiday {
       color: #e53935;
       font-weight: bold;
     }
@@ -400,6 +459,8 @@ async function main() {
     document.getElementById(
       "formArea"
     ).style.display = "block";
+    
+    await loadCompanyHolidays();
 
   } catch (error) {
 
@@ -614,7 +675,22 @@ function createCalendar(
           "weekend"
         );
       }
+  
+      const dateKey =
+        year +
+        "-" +
+        String(month + 1).padStart(2, "0") +
+        "-" +
+        String(day).padStart(2, "0");
 
+      if (
+        companyHolidays.includes(dateKey)
+      ) {
+        element.classList.add(
+          "holiday"
+        );
+      }
+      
       if (
         selectedDate &&
         selectedDate.getFullYear() === year &&
