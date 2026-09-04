@@ -712,13 +712,34 @@ function createCalendar(
 
           event.stopPropagation();
 
+          const selectedDateKey =
+            year +
+            "-" +
+            String(month + 1).padStart(2, "0") +
+            "-" +
+            String(day).padStart(2, "0");
+
+          const isCompanyHoliday =
+            companyHolidays.includes(
+              selectedDateKey
+            );
+
+          if (isCompanyHoliday) {
+
+            alert(
+              "วันที่เลือกเป็นวันหยุดบริษัท\n" +
+              "The selected date is a company holiday."
+            );
+
+          }
+
           selectedDate =
             new Date(
               year,
               month,
               day
             );
-
+          
           const yyyy =
             selectedDate
               .getFullYear()
