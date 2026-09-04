@@ -1048,6 +1048,33 @@ document
         return;
       }
 
+      // Check company holidays
+      const startIsHoliday =
+        companyHolidays.includes(startDate);
+
+      const endIsHoliday =
+        companyHolidays.includes(endDate);
+
+      if (startIsHoliday || endIsHoliday) {
+
+        alert(
+          "วันที่เริ่มลาหรือวันที่สิ้นสุดลาเป็นวันหยุดบริษัท\n" +
+          "The start date or end date is a company holiday."
+        );
+
+        return;
+      }
+
+
+      if (Number(leaveDays) <= 0) {
+
+        alert(
+          "วันที่สิ้นสุดต้องไม่ก่อนวันที่เริ่มลา\n" +
+          "End date cannot be earlier than start date"
+        );
+
+        return;
+      }
 
       if (Number(leaveDays) <= 0) {
 
@@ -1180,8 +1207,7 @@ document
           );
 
         }
-
-
+      
       } catch (error) {
 
         console.error(error);
