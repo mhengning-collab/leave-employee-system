@@ -186,6 +186,12 @@
     .calendar-day.empty:hover {
       background: transparent;
     }
+
+    .calendar-day.weekend {
+      color: #e53935;
+      font-weight: bold;
+    }
+    
   </style>
 </head>
 
@@ -593,6 +599,21 @@ function createCalendar(
 
       element.textContent = day;
 
+      const dayOfWeek =
+        new Date(
+          year,
+          month,
+          day
+        ).getDay();
+
+      if (
+        dayOfWeek === 0 ||
+        dayOfWeek === 6
+      ) {
+        element.classList.add(
+          "weekend"
+        );
+      }
 
       if (
         selectedDate &&
