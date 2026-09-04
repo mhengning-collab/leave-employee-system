@@ -735,12 +735,13 @@ document.addEventListener(
   }
 );
 
-
 /* =========================
    CALCULATE LEAVE DAYS
 ========================= */
 
-function calculateLeaveDays() {
+let leaveCalculationRequestId = 0;
+
+async function calculateLeaveDays() {
 
   const start =
     document.getElementById(
@@ -752,48 +753,120 @@ function calculateLeaveDays() {
       "endDate"
     ).value;
 
+  const leaveDaysElement =
+    document.getElementById(
+      "leaveDays"
+    );
+
 
   if (!start || !end) {
 
-    document.getElementById(
-      "leaveDays"
-    ).textContent = "0";
+    leaveDaysElement.textContent =
+      "0";
 
     return;
   }
 
 
-  const startDate =
-    new Date(start + "T00:00:00");
+  if (end < start) {
 
-  const endDate =
-    new Date(end + "T00:00:00");
-
-
-  if (endDate < startDate) {
-
-    document.getElementById(
-      "leaveDays"
-    ).textContent = "0";
+    leaveDaysElement.textContent =
+      "0";
 
     return;
   }
 
 
-  const difference =
-    endDate - startDate;
+  const requestId =
+    ++leaveCalculationRequestId;
 
 
-  const days =
-    Math.floor(
-      difference /
-      (1000 * 60 * 60 * 24)
-    ) + 1;
+  leaveDaysElement.textContent =
+    "...";
 
 
-  document.getElementById(
-    "leaveDays"
-  ).textContent = days;
+  try {
+
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body: JSON.stringify({
+
+            action:
+              "calculateLeaveDays",
+
+            startDate:
+              start,
+
+            endDate:
+              end
+
+          })
+        }
+      );
+
+
+    const result =
+      await response.json();
+
+
+    if (
+      requestId !==
+      leaveCalculationRequestId
+    ) {
+
+      return;
+
+    }
+
+
+    if (result.success) {
+
+      leaveDaysElement.textContent =
+        String(
+          result.leaveDays || 0
+        );
+
+    } else {
+
+      leaveDaysElement.textContent =
+        "0";
+
+      console.error(
+        result.message
+      );
+
+    }
+
+
+  } catch (error) {
+
+    if (
+      requestId !==
+      leaveCalculationRequestId
+    ) {
+
+      return;
+
+    }
+
+    leaveDaysElement.textContent =
+      "0";
+
+    console.error(
+      "CALCULATE LEAVE DAYS ERROR:",
+      error
+    );
+
+  }
 
 }
 
