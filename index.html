@@ -90,67 +90,7 @@
       margin-bottom: 15px;
     }
 
-async function loadCompanyHolidays() {
 
-  try {
-
-    const response =
-      await fetch(
-        API_URL,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "text/plain;charset=utf-8"
-          },
-
-          body: JSON.stringify({
-            action:
-              "getCompanyHolidays"
-          })
-        }
-      );
-
-    const result =
-      await response.json();
-
-    if (result.success) {
-
-      companyHolidays =
-        result.holidays || [];
-
-      console.log(
-        "Company Holidays:",
-        companyHolidays
-      );
-    
-      alert(
-        "Company Holidays:\n" +
-        companyHolidays.join("\n")
-      );
-
-      
-    } else {
-
-      console.error(
-        "Unable to load company holidays:",
-        result.message
-      );
-
-    }
-
-  } catch (error) {
-
-    console.error(
-      "GET COMPANY HOLIDAYS ERROR:",
-      error
-    );
-
-  }
-
-}
-    
     /* =========================
        Custom English Calendar
     ========================= */
@@ -420,8 +360,64 @@ const API_URL =
   "https://script.google.com/macros/s/AKfycbyk4kGh1Ls8NSEmAjrT2xYYRCUIOgZsAFnpeLNcAtVRnkbyM2q31wIjwcB593WXiWzx/exec";
 
 let lineProfile = null;
+let companyHolidays = [];
 
+async function loadCompanyHolidays() {
 
+  try {
+
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body: JSON.stringify({
+            action:
+              "getCompanyHolidays"
+          })
+        }
+      );
+
+    const result =
+      await response.json();
+
+    if (result.success) {
+
+      companyHolidays =
+        result.holidays || [];
+
+      console.log(
+        "Company Holidays:",
+        companyHolidays
+      );
+
+    } else {
+
+      console.error(
+        "Unable to load company holidays:",
+        result.message
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "GET COMPANY HOLIDAYS ERROR:",
+      error
+    );
+
+  }
+
+}
+
+  
 /* =========================
    LIFF
 ========================= */
