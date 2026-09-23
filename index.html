@@ -216,7 +216,71 @@
       สวัสดีคุณ / Welcome
       <span id="displayName"></span>
     </div>
+    <!-- =========================
+     MY LEAVE BALANCE
+    ========================= -->
 
+    <div
+      id="leaveBalance"
+      style="
+        margin-bottom: 20px;
+        padding: 15px;
+        background: #f1f3f5;
+        border-radius: 12px;
+      "
+    >
+
+      <div
+        style="
+          font-size: 18px;
+          font-weight: bold;
+          margin-bottom: 10px;
+        "
+      >
+        My Leave Balance
+        <span id="balanceYear"></span>
+      </div>
+
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 6px;
+        "
+      >
+        <span>Entitled</span>
+        <strong>
+          <span id="balanceEntitled">-</span> day(s)
+        </strong>
+      </div>
+
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 6px;
+        "
+      >
+        <span>Used</span>
+        <strong>
+          <span id="balanceUsed">-</span> day(s)
+        </strong>
+      </div>
+
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+        "
+      >
+        <span>Remaining</span>
+        <strong>
+          <span id="balanceRemaining">-</span> day(s)
+        </strong>
+      </div>
+
+    </div>
+    
     <label for="leaveType">
       ประเภทการลา / Leave Type
     </label>
@@ -417,6 +481,101 @@ async function loadCompanyHolidays() {
 
 }
 
+/* =========================
+   LOAD MY ANNUAL LEAVE BALANCE
+========================= */
+
+async function loadMyAnnualLeaveBalance() {
+
+  try {
+
+    if (!lineProfile || !lineProfile.userId) {
+
+      console.error(
+        "LINE User ID not available."
+      );
+
+      return;
+    }
+
+    const currentYear =
+      new Date().getFullYear();
+
+    document.getElementById(
+      "balanceYear"
+    ).textContent =
+      " " + currentYear;
+
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body: JSON.stringify({
+
+            action:
+              "getAnnualLeaveBalance",
+
+            userId:
+              lineProfile.userId,
+
+            year:
+              currentYear
+
+          })
+        }
+      );
+
+    const result =
+      await response.json();
+
+    console.log(
+      "Annual Leave Balance:",
+      result
+    );
+
+    if (result.success) {
+
+      document.getElementById(
+        "balanceEntitled"
+      ).textContent =
+        result.entitlement;
+
+      document.getElementById(
+        "balanceUsed"
+      ).textContent =
+        result.used;
+
+      document.getElementById(
+        "balanceRemaining"
+      ).textContent =
+        result.remaining;
+
+    } else {
+
+      console.error(
+        "Unable to load Annual Leave balance:",
+        result.message
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "GET ANNUAL LEAVE BALANCE ERROR:",
+      error
+    );
+
+  }
+
+}
   
 /* =========================
    LIFF
@@ -463,6 +622,8 @@ async function main() {
     ).style.display = "block";
     
     await loadCompanyHolidays();
+
+    await loadMyAnnualLeaveBalance();
 
   } catch (error) {
 
