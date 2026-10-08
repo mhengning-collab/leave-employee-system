@@ -411,6 +411,15 @@
     </button>
 
   </div>
+  <div id="leaveHistorySection">
+
+    <h2>My Leave Requests</h2>
+
+     <div id="leaveHistory">
+      Loading leave history...
+    </div>
+
+  </div>
 
 </div>
 
@@ -624,6 +633,8 @@ async function main() {
     await loadCompanyHolidays();
 
     await loadMyAnnualLeaveBalance();
+
+    await loadMyLeaveHistory();
 
   } catch (error) {
 
@@ -1392,6 +1403,145 @@ document
     }
   );
 
+/* =========================
+   LOAD MY LEAVE HISTORY
+========================= */
+
+async function loadMyLeaveHistory() {
+
+  const container =
+    document.getElementById(
+      "leaveHistory"
+    );
+
+  if (!container) {
+    return;
+  }
+
+  try {
+
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body: JSON.stringify({
+
+            action:
+              "getMyLeaveHistory",
+
+            userId:
+              lineProfile.userId
+
+          })
+        }
+      );
+
+    const result =
+      await response.json();
+
+    console.log(
+      "LEAVE HISTORY DATA:",
+      result
+    );
+
+    if (!result.success) {
+
+      container.innerHTML =
+        result.message ||
+        "Unable to load leave history.";
+
+      return;
+    }
+
+    const requests =
+      result.requests || [];
+
+    if (requests.length === 0) {
+
+      container.innerHTML =
+        "No leave requests found.";
+
+      return;
+    }
+
+    container.innerHTML =
+      requests.map(function(request) {
+
+        let cancelButton = "";
+
+        const status =
+          String(
+            request.status || ""
+          ).trim();
+
+        if (
+          status === "รออนุมัติ" ||
+          status === "อนุมัติ"
+        ) {
+
+          cancelButton = `
+            <button
+              type="button"
+              onclick="cancelMyLeave(${request.row})"
+            >
+              Cancel
+            </button>
+          `;
+
+        }
+
+        return `
+          <div class="leave-history-card">
+
+            <div>
+              <strong>Leave Type:</strong>
+              ${request.leaveType}
+            </div>
+
+            <div>
+              <strong>Date:</strong>
+              ${request.startDate}
+              -
+              ${request.endDate}
+            </div>
+
+            <div>
+              <strong>Days:</strong>
+              ${request.leaveDays}
+            </div>
+
+            <div>
+              <strong>Status:</strong>
+              ${request.status}
+            </div>
+
+            ${cancelButton}
+
+          </div>
+        `;
+
+      }).join("");
+
+  } catch (error) {
+
+    console.error(
+      "LOAD LEAVE HISTORY ERROR:",
+      error
+    );
+
+    container.innerHTML =
+      "Unable to load leave history.";
+
+  }
+
+}
 
 main();
 
