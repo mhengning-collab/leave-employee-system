@@ -1404,6 +1404,47 @@ document
   );
 
 /* =========================
+   TRANSLATE LEAVE TYPE
+========================= */
+
+function translateLeaveType(type) {
+
+  const leaveTypeMap = {
+    "ลาพักร้อน": "Annual Leave",
+    "ลาป่วย": "Sick Leave",
+    "ลากิจ": "Personal Leave",
+    "ลาคลอด": "Maternity Leave",
+    "ลาสมรส": "Marriage Leave",
+    "ลากิจศพครอบครัว": "Family Bereavement Leave",
+    "ลากิจฉุกเฉิน": "Emergency Leave",
+    "ลาเกณฑ์ทหาร": "Military Service Leave",
+    "ลาบวช": "Ordination Leave"
+  };
+
+  return leaveTypeMap[String(type || "").trim()] || type;
+}
+
+/* =========================
+   TRANSLATE LEAVE STATUS
+========================= */
+
+function translateLeaveStatus(status) {
+
+  const statusMap = {
+    "รออนุมัติ": "Pending Approval",
+    "อนุมัติ": "Approved",
+    "ไม่อนุมัติ": "Rejected",
+    "ยกเลิก": "Cancelled",
+    "ยกเลิกแล้ว": "Cancelled",
+    "รอ HR พิจารณายกเลิก": "Pending Cancellation Approval",
+    "ไม่อนุมัติการยกเลิก": "Cancellation Rejected"
+  };
+
+  return statusMap[String(status || "").trim()] || status;
+}
+
+  
+/* =========================
    LOAD MY LEAVE HISTORY
 ========================= */
 
@@ -1502,7 +1543,7 @@ async function loadMyLeaveHistory() {
 
             <div>
               <strong>Leave Type:</strong>
-              ${request.leaveType}
+              ${translateLeaveType(request.leaveType)}
             </div>
 
             <div>
@@ -1519,7 +1560,7 @@ async function loadMyLeaveHistory() {
 
             <div>
               <strong>Status:</strong>
-              ${request.status}
+              ${translateLeaveStatus(request.status)}
             </div>
 
             ${cancelButton}
