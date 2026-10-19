@@ -1584,24 +1584,44 @@ async function loadMyLeaveHistory() {
 
 }
 
+
 /* =========================
    CANCEL MY LEAVE
 ========================= */
 
 async function cancelMyLeave(row) {
 
-  if (
-    !lineProfile ||
-    !lineProfile.userId
-  ) {
+  if (!lineProfile || !lineProfile.userId) {
     alert("Unable to identify your LINE account.");
     return;
   }
 
+  // Ask for cancellation reason
+  const reason = prompt(
+    "Please enter the reason for cancelling this leave request:\n" +
+    "กรุณาระบุเหตุผลในการยกเลิกใบลา:",
+    ""
+  );
+
+  if (reason === null) {
+    return;
+  }
+
+  if (!reason.trim()) {
+    alert(
+      "Please enter a cancellation reason.\n" +
+      "กรุณาระบุเหตุผลในการยกเลิกใบลา"
+    );
+    return;
+  }
+
   const confirmed = confirm(
-    "Do you want to cancel this leave request?\n\n" +
-    "• Pending leave: it will be cancelled immediately.\n" +
-    "• Approved leave: a cancellation request will be sent to HR for review."
+    "Cancellation Reason / เหตุผลในการยกเลิก:\n" +
+    reason.trim() +
+    "\n\n" +
+    "Pending Leave / ใบลารออนุมัติ: Cancelled immediately / ยกเลิกทันที\n" +
+    "Approved Leave / ใบลาที่อนุมัติแล้ว: Sent to HR for review / ส่งให้ HR พิจารณา\n\n" +
+    "Do you want to continue? / ยืนยันดำเนินการต่อหรือไม่?"
   );
 
   if (!confirmed) {
@@ -1609,24 +1629,18 @@ async function cancelMyLeave(row) {
   }
 
   try {
-
-    const response = await fetch(
-      API_URL,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "text/plain;charset=utf-8"
-        },
-
-        body: JSON.stringify({
-          action: "cancelLeave",
-          userId: lineProfile.userId,
-          row: Number(row)
-        })
-      }
-    );
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify({
+        action: "cancelLeave",
+        userId: lineProfile.userId,
+        row: Number(row),
+        reason: reason.trim()
+      })
+    });
 
     const result = await response.json();
 
@@ -1646,18 +1660,12 @@ async function cancelMyLeave(row) {
     await loadMyLeaveHistory();
 
   } catch (error) {
-
-    console.error(
-      "CANCEL MY LEAVE ERROR:",
-      error
-    );
+    console.error("CANCEL MY LEAVE ERROR:", error);
 
     alert(
       "Unable to process your request. Please try again."
     );
-
   }
-
 }
 
 main();
