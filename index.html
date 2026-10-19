@@ -1584,6 +1584,82 @@ async function loadMyLeaveHistory() {
 
 }
 
+/* =========================
+   CANCEL MY LEAVE
+========================= */
+
+async function cancelMyLeave(row) {
+
+  if (
+    !lineProfile ||
+    !lineProfile.userId
+  ) {
+    alert("Unable to identify your LINE account.");
+    return;
+  }
+
+  const confirmed = confirm(
+    "Do you want to cancel this leave request?\n\n" +
+    "• Pending leave: it will be cancelled immediately.\n" +
+    "• Approved leave: a cancellation request will be sent to HR for review."
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+
+    const response = await fetch(
+      API_URL,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "text/plain;charset=utf-8"
+        },
+
+        body: JSON.stringify({
+          action: "cancelLeave",
+          userId: lineProfile.userId,
+          row: Number(row)
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!result.success) {
+      alert(
+        result.message ||
+        "Unable to cancel this leave request."
+      );
+      return;
+    }
+
+    alert(
+      result.message ||
+      "Your cancellation request has been processed."
+    );
+
+    await loadMyLeaveHistory();
+
+  } catch (error) {
+
+    console.error(
+      "CANCEL MY LEAVE ERROR:",
+      error
+    );
+
+    alert(
+      "Unable to process your request. Please try again."
+    );
+
+  }
+
+}
+
 main();
 
 </script>
